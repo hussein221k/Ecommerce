@@ -1,0 +1,43 @@
+# Node modules
+node_modules/
+next_modules/
+
+# Next.js build
+.next/
+out/
+dist/
+build/
+
+# Env files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env*.local
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dependencies (Yarn PnP)
+.pnp/
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+lerna-debug.log
+
+# Cache
+.cache/

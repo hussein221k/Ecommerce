@@ -9,6 +9,7 @@ import {
   Smartphone,
   Truck,
   User,
+  Check, // Added Check icon import
 } from "lucide-react";
 
 import Navbar from "../components/Navbar";
@@ -57,10 +58,9 @@ function CheckoutContent() {
     postalCode: "",
   });
 
-  const { showSuccess, showError, showInfo, showWarning } = useNotification();
+  const { showError, showWarning } = useNotification();
 
   // Removed Recaptcha Effect
-
 
   const handleInitiateOrder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,9 +270,7 @@ function CheckoutContent() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          phone: e.target.value
-                            .replace(/\D/g, "")
-                            .slice(0, 11),
+                          phone: e.target.value.replace(/\D/g, "").slice(0, 11),
                         })
                       }
                     />

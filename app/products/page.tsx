@@ -1,16 +1,17 @@
 "use client";
 
-import { useProducts } from "../context/product-context";
-import Navbar from "../components/Navbar";
-import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
-import gsap from "gsap";
 import { useEffect, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import gsap from "gsap";
+import { ShoppingCart } from "lucide-react";
+
+import Navbar from "../components/Navbar";
+import { useProducts } from "../context/product-context";
 
 export default function ProductsPage() {
   const { products } = useProducts();
   const containerRef = useRef(null);
-
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.from(".product-card", {
@@ -18,7 +19,7 @@ export default function ProductsPage() {
         opacity: 0,
         duration: 0.8,
         stagger: 0.1,
-        ease: "power3.out"
+        ease: "power3.out",
       });
     }, containerRef);
 
@@ -28,58 +29,72 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" ref={containerRef}>
+
+      <main
+        className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
+        ref={containerRef}
+      >
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient from-white to-gray-400">
             تشكيلة حصرية
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            استكشف مجموعتنا المختارة بعناية من المنتجات المتميزة، والمصممة خصيصاً لأصحاب الذوق الرفيع.
+            استكشف مجموعتنا المختارة بعناية من المنتجات المتميزة، والمصممة
+            خصيصاً لأصحاب الذوق الرفيع.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map((product) => (
-            <Link 
-              href={`/products/${product.id}`}
-              key={product.id}
-              className="product-card group bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 block"
-            >
-              <div className="relative h-64 overflow-hidden">
-                <img 
-                  src={product.image} 
-                  alt={product.name}
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
-              </div>
-              
-              <div className="p-6">
-                <div className="text-xs font-medium text-primary mb-2 uppercase tracking-wider">
-                  {product.category}
+        {products.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-xl text-gray-400 mb-4">لا توجد منتجات حالياً</p>
+            <p className="text-gray-500">يرجى الرجوع لاحقاً</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <Link
+                href={`/products/${product.id}`}
+                key={product.id}
+                className="product-card group bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 block"
+              >
+                <div className="relative h-64 overflow-hidden">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    priority={product.id < 3}
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{product.name}</h3>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                  {product.description}
-                </p>
-                
-                <div className="flex items-center justify-between mt-auto">
-                  <span className="text-2xl font-bold text-white">
-                    ${product.price.toFixed(2)}
-                  </span>
-                  
-                  <span 
-                    className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-semibold hover:bg-gray-200 transition-colors"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    اشتري الآن
-                  </span>
+
+                <div className="p-6">
+                  <div className="text-xs font-medium text-primary mb-2 uppercase tracking-wider">
+                    {product.category}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                    {product.description}
+                  </p>
+
+                  <div className="flex items-center justify-between mt-auto">
+                    <span className="text-2xl font-bold text-white">
+                      ${product.price.toFixed(2)}
+                    </span>
+
+                    <span className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-semibold hover:bg-gray-200 transition-colors">
+                      <ShoppingCart className="h-4 w-4" />
+                      اشتري الآن
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

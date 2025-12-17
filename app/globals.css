@@ -16,14 +16,6 @@
   --accent: #a78bfa;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
-}
-
 html {
   scroll-behavior: smooth;
 }
@@ -59,4 +51,8 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
+}
+
+.animation-delay-2s {
+  animation-delay: 2s;
 }

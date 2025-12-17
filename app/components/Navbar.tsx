@@ -1,11 +1,19 @@
-"use client";
-
+import {  useLayoutEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, Menu, X, ShoppingCart, Sun, Moon, User, LogOut, Package } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { useCart } from "../context/cart-context";
+import {
+  LogOut,
+  Menu,
+  Moon,
+  Package,
+  ShoppingCart,
+  Sun,
+  X,
+} from "lucide-react";
+
 import { useAuth } from "../context/auth-context";
+import { useCart } from "../context/cart-context";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,9 +22,18 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true)
+  }, []);
+  if(!mounted){
+    return null
+  }
 
-  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = items.reduce(
+    (sum: number, item: { quantity: number }) => sum + item.quantity,
+    0
+  );
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-white/10 transition-colors duration-300">
@@ -25,38 +42,59 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
               <div className="h-10 w-10 relative overflow-hidden rounded-lg">
-                 <img src="/images/Logo.jpg" alt="نوفا" className="object-cover w-full h-full" />
+                <Image
+                  fill
+                  src="/images/Logo.jpg"
+                  alt="نوفا"
+                  className="object-cover"
+                  sizes="40px"
+                  suppressHydrationWarning
+                />
               </div>
-              <span className="text-xl font-bold text-primary">
-                نوفا
-              </span>
+              <span className="text-xl font-bold text-primary">نوفا</span>
             </Link>
           </div>
-          
+
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-8">
-              <Link href="/" className="hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium">
+              <Link
+                href="/"
+                className="hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium"
+              >
                 الرئيسية
               </Link>
-              <Link href="/products" className="hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium">
+              <Link
+                href="/products"
+                className="hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium"
+              >
                 المنتجات
               </Link>
-              <Link href="/about" className="hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium">
+              <Link
+                href="/about"
+                className="hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium"
+              >
                 من نحن
               </Link>
-              
+
               {/* Theme Toggle */}
-              {mounted && (
-                <button
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                >
-                  {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                </button>
-              )}
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors ${
+                  mounted ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </button>
 
               {/* Cart */}
-              <Link href="/cart" className="relative p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+              <Link
+                href="/cart"
+                className="relative p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+              >
                 <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -68,8 +106,10 @@ export default function Navbar() {
               {/* Auth */}
               {user ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium">أهلاً, {user.name}</span>
-                  <Link 
+                  <span className="text-sm font-medium">
+                    أهلاً, {user.name}
+                  </span>
+                  <Link
                     href="/orders"
                     className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     title="طلباتي"
@@ -86,7 +126,10 @@ export default function Navbar() {
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors">
+                  <Link
+                    href="/login"
+                    className="text-sm font-medium hover:text-primary transition-colors"
+                  >
                     تسجيل الدخول
                   </Link>
                 </div>
@@ -99,7 +142,11 @@ export default function Navbar() {
               onClick={() => setIsOpen(!isOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none"
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
@@ -109,20 +156,32 @@ export default function Navbar() {
       {isOpen && (
         <div className="md:hidden bg-background border-b border-white/10">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link href="/" className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium">
+            <Link
+              href="/"
+              className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium"
+            >
               الرئيسية
             </Link>
-            <Link href="/products" className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium">
+            <Link
+              href="/products"
+              className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium"
+            >
               المنتجات
             </Link>
-            <Link href="/about" className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium">
+            <Link
+              href="/about"
+              className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium"
+            >
               من نحن
             </Link>
-            <Link href="/cart" className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium">
+            <Link
+              href="/cart"
+              className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium"
+            >
               السلة ({cartCount})
             </Link>
             {user ? (
-              <button 
+              <button
                 onClick={logout}
                 className="w-full text-left block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium text-red-500"
               >
@@ -130,7 +189,10 @@ export default function Navbar() {
               </button>
             ) : (
               <>
-                <Link href="/login" className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium">
+                <Link
+                  href="/login"
+                  className="block hover:bg-white/10 px-3 py-2 rounded-md text-base font-medium"
+                >
                   تسجيل الدخول
                 </Link>
               </>

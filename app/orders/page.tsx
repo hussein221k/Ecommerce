@@ -1,8 +1,16 @@
 "use client";
 
-import { useOrders } from "../context/order-context";
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Package,
+  Truck,
+  XCircle,
+} from "lucide-react";
+
 import Navbar from "../components/Navbar";
-import { Package, CheckCircle, XCircle, Clock, Truck, AlertCircle } from "lucide-react";
+import { useOrders } from "../context/order-context";
 
 export default function OrdersPage() {
   const { orders } = useOrders();
@@ -40,7 +48,7 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Navbar />
-      
+
       <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
           <Package className="h-8 w-8 text-primary" />
@@ -52,71 +60,121 @@ export default function OrdersPage() {
             <div className="text-center py-20 bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-white/10">
               <h2 className="text-2xl font-bold mb-4">No orders found</h2>
               <p className="text-gray-500 dark:text-gray-400">
-                You haven't placed any orders yet.
+                You haven&apos;t placed any orders yet.
               </p>
             </div>
           ) : (
-            orders.map((order) => (
-              <div 
-                key={order.id}
-                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Order ID</div>
-                      <div className="font-bold text-lg">{order.id}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Date Placed</div>
-                      <div className="font-medium">
-                        {new Date(order.date).toLocaleDateString("en-US", {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Amount</div>
-                      <div className="font-bold text-lg text-primary">${order.total.toFixed(2)}</div>
-                    </div>
-                    <div>
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${getStatusColor(order.status)}`}>
-                        {getStatusIcon(order.status)}
-                        <span className="font-bold text-sm">{order.status}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-zinc-200 dark:border-white/10 pt-6">
-                    <h3 className="font-semibold mb-4">Items</h3>
-                    <div className="space-y-3">
-                      {order.items.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600 dark:text-gray-300">
-                            {item.quantity}x {item.name}
-                          </span>
-                          {item.price && <span>${(item.price * item.quantity).toFixed(2)}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {order.status === "Refused" && (
-                    <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-4 rounded-lg flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+            orders.map(
+              (order: {
+                id?: string;
+                _id?: string;
+                status: string;
+                date?: string;
+                createdAt?: string;
+                totalAmount?: number;
+                total?: number;
+                items: Array<{ name: string; quantity: number; price: number }>;
+              }) => (
+                <div
+                  key={order.id || order._id}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                       <div>
-                        <h4 className="font-bold text-red-700 dark:text-red-400">Delivery Refused</h4>
-                        <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                          This delivery was refused by the recipient or could not be completed. Please contact support for assistance.
-                        </p>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                          Order ID
+                        </div>
+                        <div className="font-bold text-lg">
+                          {order.id || order._id}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                          Date Placed
+                        </div>
+                        <div className="font-medium">
+                          {new Date(
+                            (order.date || order.createdAt) ?? new Date()
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                          Total Amount
+                        </div>
+                        <div className="font-bold text-lg text-primary">
+                          $
+                          {((order.totalAmount ?? order.total) || 0).toFixed(2)}
+                        </div>
+                      </div>
+                      <div>
+                        <div
+                          className={`flex items-center gap-2 px-4 py-2 rounded-full border ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
+                          {getStatusIcon(order.status)}
+                          <span className="font-bold text-sm">
+                            {order.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  )}
+
+                    <div className="border-t border-zinc-200 dark:border-white/10 pt-6">
+                      <h3 className="font-semibold mb-4">Items</h3>
+                      <div className="space-y-3">
+                        {order.items.map(
+                          (
+                            item: {
+                              name: string;
+                              quantity: number;
+                              price: number;
+                            },
+                            index: number
+                          ) => (
+                            <div
+                              key={index}
+                              className="flex justify-between items-center text-sm"
+                            >
+                              <span className="text-gray-600 dark:text-gray-300">
+                                {item.quantity}x {item.name}
+                              </span>
+                              {item.price && (
+                                <span>
+                                  ${(item.price * item.quantity).toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                    {order.status === "Refused" && (
+                      <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-4 rounded-lg flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-bold text-red-700 dark:text-red-400">
+                            Delivery Refused
+                          </h4>
+                          <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                            This delivery was refused by the recipient or could
+                            not be completed. Please contact support for
+                            assistance.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              )
+            )
           )}
         </div>
       </main>

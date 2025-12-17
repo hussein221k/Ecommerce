@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useProducts } from "../context/product-context";
-import { useCart } from "../context/cart-context";
-import { useOrders } from "../context/order-context";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  CreditCard,
+  Loader2,
+  MapPin,
+  Smartphone,
+  Truck,
+  User,
+} from "lucide-react";
+
 import Navbar from "../components/Navbar";
-import { Check, CreditCard, Truck, Banknote, Loader2 } from "lucide-react";
+import { useAuth } from "../context/auth-context";
+import { useCart } from "../context/cart-context";
+import { useNotification } from "../context/NotificationContext";
+import { useOrders } from "../context/order-context";
+import { useProducts } from "../context/product-context";
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
@@ -14,67 +24,165 @@ function CheckoutContent() {
   const { products } = useProducts();
   const { items: cartItems, total: cartTotal, clearCart } = useCart();
   const { addOrder } = useOrders();
-  
+  const { user } = useAuth();
+
   const productId = searchParams.get("id");
   const isCartCheckout = productId === "cart";
-  
-  // Determine items to checkout
-  const checkoutItems = isCartCheckout 
-    ? cartItems 
-    : products.filter(p => p.id === Number(productId)).map(p => ({ ...p, quantity: 1, selectedSize: undefined as string | undefined }));
 
-  const totalAmount = isCartCheckout 
-    ? cartTotal 
-    : (checkoutItems[0]?.price || 0);
+  const checkoutItems = isCartCheckout
+    ? cartItems
+    : products
+        .filter((p) => p.id === Number(productId))
+        .map((p) => ({
+          ...p,
+          quantity: 1,
+          selectedSize: undefined as string | undefined,
+        }));
+
+  const totalAmount = isCartCheckout ? cartTotal : checkoutItems[0]?.price || 0;
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  if (checkoutItems.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-foreground">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">No items to checkout</h2>
-          <button 
-            onClick={() => router.push("/products")}
-            className="text-primary hover:underline"
-          >
-            Return to shop
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Form State
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    secondaryPhone: "",
+    address: "",
+    city: "",
+    governorate: "",
+    postalCode: "",
+  });
 
-  const handleOrder = (e: React.FormEvent) => {
+  const { showSuccess, showError, showInfo, showWarning } = useNotification();
+
+  // Removed Recaptcha Effect
+
+
+  const handleInitiateOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsProcessing(true);
+    // Basic validation
+    if (
+      !formData.phone ||
+      formData.phone.length !== 11 ||
+      !formData.phone.startsWith("01")
+    ) {
+      showWarning("Please enter a valid Egyptian phone number");
+      return;
+    }
 
-    // Simulate order processing
-    setTimeout(() => {
-      const newOrder = {
-        id: `ORD-${Math.floor(Math.random() * 10000)}`,
-        date: new Date().toISOString(),
-        total: totalAmount,
-        status: "Pending" as "Pending",
-        items: checkoutItems
+    submitOrder();
+  };
+
+  const submitOrder = async () => {
+    setIsProcessing(true);
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+    try {
+      const shippingAddress = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        street: formData.address,
+        city: formData.city,
+        state: formData.governorate,
+        zipCode: formData.postalCode,
+        country: "Egypt",
+        phone: formData.phone,
+        secondaryPhone: formData.secondaryPhone,
+        isVerified: true, // Assuming true since we removed step
       };
 
-      addOrder(newOrder);
-      
-      if (isCartCheckout) {
-        clearCart();
+      const orderData = {
+        items: checkoutItems.map((item) => ({
+          productId: item._id || item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          selectedSize: item.selectedSize,
+        })),
+        totalAmount,
+        shippingAddress: {
+          ...shippingAddress,
+          isVerified: true, // Phone is verified
+        },
+        paymentMethod,
+      };
+
+      if (user) {
+        const token = localStorage.getItem("token");
+
+        // Create order
+        const orderRes = await fetch(`${apiBase}/api/orders`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(orderData),
+        });
+
+        if (!orderRes.ok) {
+          const err = await orderRes.json();
+          throw new Error(err.message || "Failed to create order");
+        }
+
+        const orderResult = await orderRes.json();
+        const orderId = orderResult.data?._id || orderResult.data?.id;
+
+        // If payment method is Vodafone Cash, process payment
+        if (paymentMethod === "vodafone_cash" && orderId) {
+          const paymentRes = await fetch(
+            `${apiBase}/api/payments/vodafonecash`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                amount: totalAmount,
+                userId: user.id,
+                orderId: orderId,
+                phone: formData.phone,
+              }),
+            }
+          );
+
+          if (!paymentRes.ok) {
+            const paymentErr = await paymentRes.json();
+            throw new Error(paymentErr.message || "Payment processing failed");
+          }
+        }
+      } else {
+        // Guest Fallback
+        addOrder({
+          ...orderData,
+          id: `ORD-GUEST-${Date.now()}`,
+          date: new Date().toISOString(),
+          status: "Pending",
+          items: checkoutItems.map((item) => ({
+            productId: item.id || item._id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity || 1,
+            selectedSize: item.selectedSize,
+          })),
+        });
       }
 
-      setIsProcessing(false);
+      if (isCartCheckout) clearCart();
       setIsSuccess(true);
-      
-      // Redirect after showing success
-      setTimeout(() => {
-        router.push("/orders");
-      }, 2000);
-    }, 2000);
+      setTimeout(() => router.push("/orders"), 2000);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Something went wrong";
+      showError(errorMessage);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (isSuccess) {
@@ -86,9 +194,8 @@ function CheckoutContent() {
           </div>
           <h2 className="text-2xl font-bold mb-2">Order Confirmed!</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Thank you for your purchase. Your order has been placed successfully.
+            Thank you for your purchase. We will contact you shortly.
           </p>
-          <p className="text-sm text-gray-500">Redirecting to orders...</p>
         </div>
       </div>
     );
@@ -97,141 +204,226 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-12 transition-colors duration-300">
       <Navbar />
-      
-      <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+
+      <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Order Summary */}
-          <div className="space-y-6">
-            <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
-              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-              <div className="space-y-4 mb-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                {checkoutItems.map((item, idx) => (
-                  <div key={idx} className="flex gap-4">
-                    <img 
-                      src={item.image} 
-                      alt={item.name} 
-                      className="w-16 h-16 object-cover rounded-lg"
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Form Section */}
+          <div className="lg:col-span-2 space-y-8">
+            <form
+              id="checkout-form"
+              onSubmit={handleInitiateOrder}
+              className="space-y-8"
+            >
+              {/* Contact */}
+              <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <User className="h-5 w-5" /> Contact Information
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="firstName"
+                      className="block text-sm font-medium mb-1"
+                    >
+                      First Name
+                    </label>
+                    <input
+                      id="firstName"
+                      required
+                      className="w-full p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800"
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, firstName: e.target.value })
+                      }
                     />
-                    <div>
-                      <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Qty: {item.quantity} {item.selectedSize && `• Size: ${item.selectedSize}`}
-                      </p>
-                      <p className="text-primary font-bold mt-1">${item.price.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="lastName"
+                      className="block text-sm font-medium mb-1"
+                    >
+                      Last Name
+                    </label>
+                    <input
+                      id="lastName"
+                      required
+                      className="w-full p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800"
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, lastName: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1">
+                      Phone Number (Egypt) *
+                    </label>
+                    <input
+                      required
+                      type="tel"
+                      placeholder="01xxxxxxxxx"
+                      maxLength={11}
+                      className="w-full p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          phone: e.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 11),
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Shipping */}
+              <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <MapPin className="h-5 w-5" /> Shipping Address
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1">
+                      Address
+                    </label>
+                    <input
+                      required
+                      placeholder="Street, Apartment"
+                      className="w-full p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800"
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="city"
+                      className="block text-sm font-medium mb-1"
+                    >
+                      City
+                    </label>
+                    <input
+                      id="city"
+                      required
+                      className="w-full p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800"
+                      value={formData.city}
+                      onChange={(e) =>
+                        setFormData({ ...formData, city: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="postalCode"
+                      className="block text-sm font-medium mb-1"
+                    >
+                      Postal Code
+                    </label>
+                    <input
+                      id="postalCode"
+                      required
+                      className="w-full p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800"
+                      value={formData.postalCode}
+                      onChange={(e) =>
+                        setFormData({ ...formData, postalCode: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment */}
+              <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
+                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" /> Payment Method
+                </h2>
+                <div className="space-y-3">
+                  {/* Cash on Delivery */}
+                  <div
+                    onClick={() => setPaymentMethod("cod")}
+                    className={`cursor-pointer p-4 rounded-xl border flex items-center gap-3 transition-all ${
+                      paymentMethod === "cod"
+                        ? "bg-blue-500/10 border-blue-500"
+                        : "bg-white dark:bg-black/30 border-zinc-200 dark:border-white/10"
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white">
+                      <Truck className="h-5 w-5" />
                     </div>
+                    <div>
+                      <div className="font-medium">Cash on Delivery</div>
+                      <div className="text-xs opacity-60">Pay on receipt</div>
+                    </div>
+                    {paymentMethod === "cod" && (
+                      <Check className="h-5 w-5 text-blue-500 ml-auto" />
+                    )}
+                  </div>
+
+                  {/* Vodafone Cash */}
+                  <div
+                    onClick={() => setPaymentMethod("vodafone_cash")}
+                    className={`cursor-pointer p-4 rounded-xl border flex items-center gap-3 transition-all ${
+                      paymentMethod === "vodafone_cash"
+                        ? "bg-red-500/10 border-red-500"
+                        : "bg-white dark:bg-black/30 border-zinc-200 dark:border-white/10"
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white">
+                      <Smartphone className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-medium">Vodafone Cash</div>
+                      <div className="text-xs opacity-60">
+                        Pay via mobile wallet
+                      </div>
+                    </div>
+                    {paymentMethod === "vodafone_cash" && (
+                      <Check className="h-5 w-5 text-red-500 ml-auto" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          {/* Sidebar */}
+          <div>
+            <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6 sticky top-24">
+              <h2 className="text-xl font-semibold mb-4">Summary</h2>
+              <div className="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2">
+                {checkoutItems.map((item, id) => (
+                  <div key={id} className="flex justify-between text-sm">
+                    <span>
+                      {item.name} x{item.quantity}
+                    </span>
+                    <span className="font-mono">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </span>
                   </div>
                 ))}
               </div>
-              
-              <div className="border-t border-zinc-200 dark:border-white/10 pt-4 space-y-2">
-                <div className="flex justify-between text-gray-500 dark:text-gray-400">
-                  <span>Subtotals</span>
-                  <span>${totalAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-gray-500 dark:text-gray-400">
-                  <span>Shipping</span>
-                  <span>Free</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg pt-2 border-t border-zinc-200 dark:border-white/10 mt-2">
-                  <span>Total</span>
-                  <span>${totalAmount.toFixed(2)}</span>
-                </div>
+              <div className="border-t border-zinc-200 dark:border-white/10 pt-4 flex justify-between font-bold text-lg">
+                <span>Total</span>
+                <span>${totalAmount.toFixed(2)}</span>
               </div>
-            </div>
-          </div>
-
-          {/* Payment Form */}
-          <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold mb-6">Payment Details</h2>
-            
-            <form onSubmit={handleOrder} className="space-y-6">
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-500 dark:text-gray-300">Select Payment Method</label>
-                
-                <div 
-                  onClick={() => setPaymentMethod("vodafone")}
-                  className={`cursor-pointer p-4 rounded-xl border flex items-center gap-3 transition-all ${
-                    paymentMethod === "vodafone" 
-                      ? "bg-red-500/10 border-red-500" 
-                      : "bg-white dark:bg-black/30 border-zinc-200 dark:border-white/10 hover:border-primary/50"
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-xs">
-                    VF
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">Vodafone Cash</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Pay via mobile wallet</div>
-                  </div>
-                  {paymentMethod === "vodafone" && <Check className="h-5 w-5 text-red-500" />}
-                </div>
-
-                <div 
-                  onClick={() => setPaymentMethod("alahly")}
-                  className={`cursor-pointer p-4 rounded-xl border flex items-center gap-3 transition-all ${
-                    paymentMethod === "alahly" 
-                      ? "bg-green-500/10 border-green-500" 
-                      : "bg-white dark:bg-black/30 border-zinc-200 dark:border-white/10 hover:border-primary/50"
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-green-700 flex items-center justify-center text-white font-bold text-xs">
-                    NBE
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">Bank Al Ahly</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Direct bank transfer</div>
-                  </div>
-                  {paymentMethod === "alahly" && <Check className="h-5 w-5 text-green-500" />}
-                </div>
-
-                <div 
-                  onClick={() => setPaymentMethod("cod")}
-                  className={`cursor-pointer p-4 rounded-xl border flex items-center gap-3 transition-all ${
-                    paymentMethod === "cod" 
-                      ? "bg-blue-500/10 border-blue-500" 
-                      : "bg-white dark:bg-black/30 border-zinc-200 dark:border-white/10 hover:border-primary/50"
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                    <Truck className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">Cash on Delivery</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Pay when you receive</div>
-                  </div>
-                  {paymentMethod === "cod" && <Check className="h-5 w-5 text-blue-500" />}
-                </div>
-              </div>
-
-              {/* Additional fields based on payment method */}
-              {paymentMethod === "vodafone" && (
-                <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/20 text-sm text-gray-600 dark:text-gray-300">
-                  Please transfer the total amount to: <span className="font-bold">010 1234 5678</span>
-                </div>
-              )}
-              
-              {paymentMethod === "alahly" && (
-                <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-sm text-gray-600 dark:text-gray-300">
-                  Bank Account: <span className="font-bold">1234 5678 9012 3456</span>
-                </div>
-              )}
-
               <button
                 type="submit"
+                form="checkout-form"
                 disabled={isProcessing}
-                className="w-full flex items-center justify-center gap-2 bg-foreground text-background py-4 rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                className="w-full flex items-center justify-center gap-2 bg-primary text-white py-4 rounded-xl font-bold hover:opacity-90 transition-all mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="animate-spin" />
                 ) : (
-                  <>
-                    Confirm Order <Banknote className="h-5 w-5" />
-                  </>
+                  "Confirm Order"
                 )}
               </button>
-            </form>
+            </div>
           </div>
         </div>
       </main>
@@ -241,7 +433,7 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div>Loading...</div>}>
       <CheckoutContent />
     </Suspense>
   );

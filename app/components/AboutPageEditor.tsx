@@ -94,7 +94,7 @@ export default function AboutPageEditor({
         <input
           type="text"
           placeholder="أدخل العنوان الرئيسي"
-          className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
         />
@@ -107,7 +107,7 @@ export default function AboutPageEditor({
         <input
           type="text"
           placeholder="أدخل العنوان الفرعي"
-          className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={formData.subtitle}
           onChange={(e) =>
             setFormData({ ...formData, subtitle: e.target.value })
@@ -122,7 +122,7 @@ export default function AboutPageEditor({
         <textarea
           rows={4}
           placeholder="أدخل الوصف"
-          className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={formData.description}
           onChange={(e) =>
             setFormData({ ...formData, description: e.target.value })
@@ -137,7 +137,7 @@ export default function AboutPageEditor({
         <textarea
           rows={3}
           placeholder="أدخل مهمتنا"
-          className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={formData.mission}
           onChange={(e) =>
             setFormData({ ...formData, mission: e.target.value })
@@ -152,7 +152,7 @@ export default function AboutPageEditor({
         <textarea
           rows={3}
           placeholder="أدخل رؤيتنا"
-          className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={formData.vision}
           onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
         />

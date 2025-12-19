@@ -216,7 +216,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-8" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground p-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-12">
           <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
           </h1>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
           >
             <LogOut className="h-4 w-4" />
             خروج
@@ -234,7 +234,7 @@ export default function AdminDashboard() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
+          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400">إجمالي الإيرادات</span>
               <DollarSign className="h-6 w-6 text-green-500" />
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
             </div>
             <div className="text-sm text-green-500 mt-2">بيانات لحظية</div>
           </div>
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
+          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400">إجمالي الطلبات</span>
               <Package className="h-6 w-6 text-blue-500" />
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
             <div className="text-3xl font-bold">{orders.length}</div>
             <div className="text-sm text-blue-500 mt-2">منذ البداية</div>
           </div>
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
+          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400">عدد المنتجات</span>
               <TrendingUp className="h-6 w-6 text-purple-500" />
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
               حالة المخزون: جيد
             </div>
           </div>
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
+          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400">طلبات معلقة</span>
               <Clock className="h-6 w-6 text-yellow-500" />
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
         <div className="grid gap-8">
           {/* Product Management */}
           {activeTab === "products" && (
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
+            <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">إدارة المنتجات</h2>
                 <button
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
               </div>
 
               {showForm && (
-                <div className="mb-8 bg-black/50 p-6 rounded-xl border border-white/10">
+                <div className="mb-8 bg-zinc-50 dark:bg-black/50 p-6 rounded-xl border border-zinc-200 dark:border-white/10">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-lg">
                       {isEditing ? "تعديل منتج" : "منتج جديد"}
@@ -376,7 +376,7 @@ export default function AdminDashboard() {
                       <input
                         id="product-name"
                         required
-                        className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                         value={formData.name}
                         onChange={(e) =>
                           setFormData({ ...formData, name: e.target.value })
@@ -395,7 +395,7 @@ export default function AdminDashboard() {
                         required
                         type="number"
                         step="0.01"
-                        className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                         value={formData.price}
                         onChange={(e) =>
                           setFormData({ ...formData, price: e.target.value })
@@ -412,7 +412,7 @@ export default function AdminDashboard() {
                       <input
                         id="product-category"
                         required
-                        className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                         value={formData.category}
                         onChange={(e) =>
                           setFormData({ ...formData, category: e.target.value })
@@ -527,7 +527,7 @@ export default function AdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-gray-400 text-sm">
+                    <tr className="border-b border-zinc-200 dark:border-white/10 text-gray-400 text-sm">
                       <th className="py-3 px-2">الصورة</th>
                       <th className="py-3 px-2">الاسم</th>
                       <th className="py-3 px-2">القسم</th>
@@ -539,7 +539,7 @@ export default function AdminDashboard() {
                     {products.map((product) => (
                       <tr
                         key={product.id}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                        className="border-b border-zinc-100 dark:border-white/5 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors"
                       >
                         <td className="py-3 px-2">
                           <div className="w-10 h-10 rounded-lg overflow-hidden">
@@ -591,7 +591,7 @@ export default function AdminDashboard() {
 
           {/* Order Management */}
           {activeTab === "orders" && (
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
+            <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-semibold mb-6">إدارة الطلبات</h2>
 
               <div className="overflow-x-auto">
@@ -714,7 +714,7 @@ export default function AdminDashboard() {
 
           {/* About Page Editor */}
           {activeTab === "about" && (
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
+            <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-semibold mb-6">
                 تعديل محتوى صفحة من نحن
               </h2>

@@ -39,7 +39,7 @@ export default function ProductsPage() {
         ref={containerRef}
       >
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient from-white to-gray-400">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/70">
             تشكيلة حصرية
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
@@ -59,7 +59,7 @@ export default function ProductsPage() {
               <Link
                 href={`/products/${product.id}`}
                 key={product.id}
-                className="product-card group bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 block"
+                className="product-card group bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 block"
               >
                 <div className="relative h-64 overflow-hidden">
                   <Image
@@ -77,7 +77,7 @@ export default function ProductsPage() {
                   <div className="text-xs font-medium text-primary mb-2 uppercase tracking-wider">
                     {product.category}
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">
+                  <h3 className="text-xl font-bold mb-2">
                     {product.name}
                   </h3>
                   <p className="text-gray-400 text-sm mb-4 line-clamp-2">
@@ -85,7 +85,7 @@ export default function ProductsPage() {
                   </p>
 
                   <div className="flex items-center justify-between mt-auto">
-                    <span className="text-2xl font-bold text-white">
+                    <span className="text-2xl font-bold">
                       {product.price.toFixed(2)} ج.م
                     </span>
 

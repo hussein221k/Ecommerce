@@ -46,21 +46,21 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300" dir="rtl">
       <Navbar />
 
       <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
           <Package className="h-8 w-8 text-primary" />
-          My Orders
+          طلباتي
         </h1>
 
         <div className="space-y-6">
           {orders.length === 0 ? (
             <div className="text-center py-20 bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-white/10">
-              <h2 className="text-2xl font-bold mb-4">No orders found</h2>
+              <h2 className="text-2xl font-bold mb-4">لا يوجد طلبات</h2>
               <p className="text-gray-500 dark:text-gray-400">
-                You haven&apos;t placed any orders yet.
+                لم تقم بأي طلبات بعد.
               </p>
             </div>
           ) : (
@@ -83,7 +83,7 @@ export default function OrdersPage() {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                       <div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                          Order ID
+                          رقم الطلب
                         </div>
                         <div className="font-bold text-lg">
                           {order.id || order._id}
@@ -91,12 +91,12 @@ export default function OrdersPage() {
                       </div>
                       <div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                          Date Placed
+                          تاريخ الطلب
                         </div>
                         <div className="font-medium">
                           {new Date(
                             (order.date || order.createdAt) ?? new Date()
-                          ).toLocaleDateString("en-US", {
+                          ).toLocaleDateString("ar-EG", {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
@@ -105,11 +105,11 @@ export default function OrdersPage() {
                       </div>
                       <div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                          Total Amount
+                          الإجمالي
                         </div>
                         <div className="font-bold text-lg text-primary">
-                          $
-                          {((order.totalAmount ?? order.total) || 0).toFixed(2)}
+                          {((order.totalAmount ?? order.total) || 0).toFixed(2)}{" "}
+                          ج.م
                         </div>
                       </div>
                       <div>
@@ -127,7 +127,7 @@ export default function OrdersPage() {
                     </div>
 
                     <div className="border-t border-zinc-200 dark:border-white/10 pt-6">
-                      <h3 className="font-semibold mb-4">Items</h3>
+                      <h3 className="font-semibold mb-4">المنتجات</h3>
                       <div className="space-y-3">
                         {order.items.map(
                           (
@@ -147,7 +147,7 @@ export default function OrdersPage() {
                               </span>
                               {item.price && (
                                 <span>
-                                  ${(item.price * item.quantity).toFixed(2)}
+                                  {(item.price * item.quantity).toFixed(2)} ج.م
                                 </span>
                               )}
                             </div>
@@ -161,12 +161,10 @@ export default function OrdersPage() {
                         <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                         <div>
                           <h4 className="font-bold text-red-700 dark:text-red-400">
-                            Delivery Refused
+                            تم رفض الاستلام
                           </h4>
                           <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                            This delivery was refused by the recipient or could
-                            not be completed. Please contact support for
-                            assistance.
+                            تم رفض استلام الطلب من قبل المستلم أو لم يكتمل التوصيل. يرجى التواصل مع الدعم للمساعدة.
                           </p>
                         </div>
                       </div>

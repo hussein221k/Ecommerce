@@ -11,26 +11,26 @@ export default function CartPage() {
   const { items, removeFromCart, updateQuantity, total } = useCart();
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300" dir="rtl">
       <Navbar />
 
       <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
           <ShoppingBag className="h-8 w-8 text-primary" />
-          Your Cart
+          عربة التسوق
         </h1>
 
         {items.length === 0 ? (
           <div className="text-center py-20 bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-white/10">
-            <h2 className="text-2xl font-bold mb-4">Your cart is empty</h2>
+            <h2 className="text-2xl font-bold mb-4">عربة التسوق فارغة</h2>
             <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Looks like you haven&apos;t added anything yet.
+              يبدو أنك لم تضف أي منتجات بعد.
             </p>
             <Link
               href="/products"
               className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-semibold hover:bg-primary/90 transition-colors"
             >
-              Start Shopping <ArrowRight className="h-4 w-4" />
+              ابذأ التسوق <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         ) : (
@@ -64,7 +64,7 @@ export default function CartPage() {
                         <div>
                           <h3 className="font-semibold text-lg">{item.name}</h3>
                           <p className="text-primary font-bold">
-                            ${item.price.toFixed(2)}
+                            {item.price.toFixed(2)} ج.م
                           </p>
                         </div>
                         <button
@@ -111,20 +111,20 @@ export default function CartPage() {
             {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl p-6 sticky top-24">
-                <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
+                <h2 className="text-xl font-semibold mb-6">ملخص الطلب</h2>
 
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-gray-500 dark:text-gray-400">
-                    <span>Subtotal</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>المجموع الفرعي</span>
+                    <span>{total.toFixed(2)} ج.م</span>
                   </div>
                   <div className="flex justify-between text-gray-500 dark:text-gray-400">
-                    <span>Shipping</span>
-                    <span>Free</span>
+                    <span>الشحن</span>
+                    <span>مجاني</span>
                   </div>
                   <div className="border-t border-zinc-200 dark:border-white/10 pt-3 flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>الإجمالي</span>
+                    <span>{total.toFixed(2)} ج.م</span>
                   </div>
                 </div>
 
@@ -132,7 +132,7 @@ export default function CartPage() {
                   href="/checkout?id=cart"
                   className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary/90 transition-all"
                 >
-                  Proceed to Checkout
+                  إتمام الطلب
                 </Link>
               </div>
             </div>

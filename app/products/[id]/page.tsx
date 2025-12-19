@@ -281,7 +281,7 @@ export default function ProductPage() {
                 </div>
 
                 <p className="text-3xl font-bold mb-8">
-                  ${product.price.toFixed(2)}
+                  {product.price.toFixed(2)} ج.م
                 </p>
 
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed mb-8">
@@ -309,19 +309,34 @@ export default function ProductPage() {
                     </div>
                   </div>
                 )}
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 bg-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  أضف إلى السلة
-                </button>
-                <button
-                  title="View more options"
-                  className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
-                >
-                  <Share2 className="h-6 w-6" />
-                </button>
+                <div className="flex flex-col gap-4 mt-auto">
+                   <div className="flex gap-4">
+                      <button
+                        onClick={handleAddToCart}
+                        className="flex-1 bg-zinc-100 dark:bg-zinc-800 text-foreground py-4 rounded-xl font-bold text-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-700"
+                      >
+                        <ShoppingCart className="h-5 w-5" />
+                        أضف إلى السلة
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (product) {
+                            await addToCart({ ...product, selectedSize });
+                            window.location.href = "/checkout?id=cart";
+                          }
+                        }}
+                        className="flex-1 bg-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-accent hover:text-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                      >
+                        اشتري دلوقتي
+                      </button>
+                      <button
+                        title="View more options"
+                        className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                      >
+                        <Share2 className="h-6 w-6" />
+                      </button>
+                   </div>
+                </div>
               </>
             )}
           </div>

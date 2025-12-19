@@ -2,18 +2,18 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-  --primary: #2563eb;
-  --secondary: #64748b;
-  --accent: #8b5cf6;
+  --foreground: #0f172a;
+  --primary: #6366f1;
+  --secondary: #94a3b8;
+  --accent: #f59e0b;
 }
 
 .dark {
-  --background: #050505;
-  --foreground: #ffffff;
-  --primary: #3b82f6;
-  --secondary: #94a3b8;
-  --accent: #a78bfa;
+  --background: #020617;
+  --foreground: #f8fafc;
+  --primary: #818cf8;
+  --secondary: #64748b;
+  --accent: #fbbf24;
 }
 
 html {

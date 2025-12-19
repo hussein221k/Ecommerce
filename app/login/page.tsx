@@ -26,7 +26,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { showError, showInfo } = useNotification();
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
+  console.log("Using API Base:", apiBase);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +42,22 @@ export default function LoginPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
-        const data = await res.json();
 
-        if (!res.ok) throw new Error(data.message || "Admin login failed");
+        let data;
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+           data = await res.json();
+        } else {
+           // If not JSON, it might be a text error (like 404 Not Found)
+           const text = await res.text();
+           if (!res.ok) throw new Error(text || res.statusText);
+           // If it was OK but not JSON? unexpected.
+           data = {}; 
+        }
+
+        if (!res.ok) {
+           throw new Error(data.message || res.statusText || "Admin login failed");
+        }
 
         document.cookie = `admin_token=${data.token}; path=/`;
         localStorage.setItem("admin_token", data.token);
@@ -117,23 +131,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden" dir="rtl">
       <div className="w-full max-w-md p-8 relative z-10">
         <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-2xl p-8 shadow-2xl">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-foreground mb-2">
               {mode === "admin"
-                ? "Admin Access"
+                ? "دخول الأدمن"
                 : mode === "login"
-                ? "Welcome Back"
-                : "Create Account"}
+                ? "أهلاً بيك"
+                : "إنشاء حساب"}
             </h2>
             <p className="text-gray-500 dark:text-gray-400">
               {mode === "admin"
-                ? "Login to manage your store"
+                ? "سجل دخول عشان تدير المتجر"
                 : mode === "login"
-                ? "Login to access your account"
-                : "Join us to start shopping"}
+                ? "سجل دخول عشان تتابع طلباتك"
+                : "انضم لينا وابدأ التسوق"}
             </p>
           </div>
 
@@ -147,7 +161,7 @@ export default function LoginPage() {
                   : "text-gray-500"
               }`}
             >
-              Login
+              تسجيل دخول
             </button>
             <button
               onClick={() => setMode("register")}
@@ -157,7 +171,7 @@ export default function LoginPage() {
                   : "text-gray-500"
               }`}
             >
-              Register
+              حساب جديد
             </button>
           </div>
 
@@ -169,7 +183,7 @@ export default function LoginPage() {
               }
               className="text-xs font-semibold text-gray-500 hover:text-primary transition-colors underline"
             >
-              {mode === "admin" ? "Back to user login" : "Admin access"}
+              {mode === "admin" ? "العودة لتسجيل دخول المستخدم" : "دخول الأدمن"}
             </button>
           </div>
 
@@ -177,16 +191,16 @@ export default function LoginPage() {
             {mode === "register" && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">
-                  Full Name
+                  الاسم بالكامل
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
                   </div>
                   <input
                     type="text"
-                    placeholder="John Doe"
-                    className="block w-full pl-10 pr-3 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                    placeholder="الاسم"
+                    className="block w-full pr-10 pl-3 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
@@ -197,16 +211,16 @@ export default function LoginPage() {
             {/* Email */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">
-                Email {mode === "register" ? "(Optional)" : ""}
+                البريد الإلكتروني {mode === "register" ? "(اختياري)" : ""}
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
                 </div>
                 <input
                   type="email"
                   placeholder="name@example.com"
-                  className="block w-full pl-10 pr-3 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                  className="block w-full pr-10 pl-3 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -216,10 +230,10 @@ export default function LoginPage() {
             {/* Phone */}
          { mode !== "admin" && <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">
-                Phone Number (Egypt) <span className="text-red-500">*</span>
+                رقم الموبايل (مصر) <span className="text-red-500">*</span>
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <Phone className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
                 </div>
                 <input
@@ -227,7 +241,7 @@ export default function LoginPage() {
                   required
                   placeholder="01xxxxxxxxx"
                   maxLength={11}
-                  className="block w-full pl-10 pr-3 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                  className="block w-full pr-10 pl-3 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                   value={phone}
                   onChange={(e) =>
                     setPhone(e.target.value.replace(/\D/g, "").slice(0, 11))
@@ -239,17 +253,17 @@ export default function LoginPage() {
             {/* Password */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">
-                Password
+                كلمة المرور
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
                 </div>
                 <input
                   type="password"
                   required
                   placeholder="••••••••"
-                  className="block w-full pl-10 pr-3 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                  className="block w-full pr-10 pl-3 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -267,17 +281,17 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Loading..." : mode === "admin" ? "Admin Login" : mode === "login" ? "Login" : "Register"}{" "}
-              <ArrowRight className="h-5 w-5" />
+              {isLoading ? "جاري التحميل..." : mode === "admin" ? "دخول الأدمن" : mode === "login" ? "دخول" : "تسجيل جديد"}{" "}
+              <ArrowRight className="h-5 w-5 transform rotate-180" />
             </button>
           </form>
 
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-white/5 text-center">
             <Link
               href="/"
-              className="text-sm text-gray-500 hover:text-primary transition-colors"
+              className="text-sm text-gray-500 hover:text-primary transition-colors flex items-center justify-center gap-2"
             >
-              ← Back to Store
+              <ArrowRight className="h-4 w-4" /> العودة للمتجر
             </Link>
           </div>
         </div>

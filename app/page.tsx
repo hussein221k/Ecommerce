@@ -10,6 +10,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import SplashScreen from "./components/SplashScreen";
 import { useProducts } from "./context/product-context";
+import { useCart } from "./context/cart-context";
 
 // Define the Product type
 type Product = {
@@ -24,6 +25,7 @@ type Product = {
 export default function Home() {
   // Fetch the products and specify types
   const { products }: { products: Product[] } = useProducts();
+  const { addToCart } = useCart();
   const featuredProducts = products.slice(0, 3);
 
   // Initialize splash state from session storage
@@ -125,15 +127,36 @@ export default function Home() {
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
                   <div className="absolute bottom-4 left-4 bg-white/90 dark:bg-black/90 backdrop-blur-md px-4 py-2 rounded-full text-sm font-bold">
-                    ${product.price.toFixed(2)}
+                    {product.price.toFixed(2)} ج.م
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
-                  {product.name}
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {product.category}
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      {product.category}
+                    </p>
+                  </div>
+                  <button
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      await addToCart({
+                        id: product.id,
+                        name: product.name,
+                        price: product.price,
+                        image: product.image
+                      });
+                      window.location.href = "/checkout?id=cart";
+                    }}
+                    className="p-3 bg-primary text-white rounded-full hover:bg-accent hover:text-black transition-all transform hover:scale-110 shadow-lg shadow-primary/20"
+                    title="اشتري دلوقتي"
+                  >
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+                </div>
               </Link>
             ))}
           </div>

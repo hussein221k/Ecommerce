@@ -9,7 +9,9 @@ import {
   Smartphone,
   Truck,
   User,
-  Check, // Added Check icon import
+  Check,
+  Building, // For Bank Al Ahly
+  Upload, // For file upload
 } from "lucide-react";
 
 import Navbar from "../components/Navbar";
@@ -46,6 +48,10 @@ function CheckoutContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Manual Payment State
+  const [vodafoneSenderNumber, setVodafoneSenderNumber] = useState("");
+  const [vodafoneReceipt, setVodafoneReceipt] = useState<File | null>(null);
+
   // Form State
   const [formData, setFormData] = useState({
     firstName: "",
@@ -70,8 +76,19 @@ function CheckoutContent() {
       formData.phone.length !== 11 ||
       !formData.phone.startsWith("01")
     ) {
-      showWarning("Please enter a valid Egyptian phone number");
+      showWarning("من فضلك ادخل رقم موبايل صحيح");
       return;
+    }
+
+    if (paymentMethod === "vodafone_cash") {
+      if (!vodafoneSenderNumber) {
+        showWarning("من فضلك ادخل رقم المحفظة المحول منها");
+        return;
+      }
+      if (!vodafoneReceipt) {
+        showWarning("من فضلك ارفع صورة التحويل");
+        return;
+      }
     }
 
     submitOrder();
@@ -82,6 +99,36 @@ function CheckoutContent() {
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
     try {
+      let receiptUrl = "";
+
+      // Upload Receipt if Vodafone Cash
+      if (paymentMethod === "vodafone_cash" && vodafoneReceipt) {
+        const uploadData = new FormData();
+        uploadData.append("image", vodafoneReceipt);
+
+        // Get token for upload (upload is protected)
+        // If guest, this might fail unless we made it public or handled guest auth.
+        // Assuming logged in based on user context availability, or relying on relaxed backend rules.
+        const token = localStorage.getItem("token");
+        const headers: HeadersInit = {};
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+        
+        const uploadRes = await fetch(`${apiBase}/api/upload`, {
+          method: "POST",
+          headers: headers,
+          body: uploadData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("فشل رفع الصورة verification failed");
+        }
+
+        const uploadJson = await uploadRes.json();
+        receiptUrl = uploadJson.url;
+      }
+
       const shippingAddress = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -92,7 +139,7 @@ function CheckoutContent() {
         country: "Egypt",
         phone: formData.phone,
         secondaryPhone: formData.secondaryPhone,
-        isVerified: true, // Assuming true since we removed step
+        isVerified: true,
       };
 
       const orderData = {
@@ -106,9 +153,12 @@ function CheckoutContent() {
         totalAmount,
         shippingAddress: {
           ...shippingAddress,
-          isVerified: true, // Phone is verified
+          isVerified: true,
         },
         paymentMethod,
+        // Add manual payment details
+        vodafoneNumber: paymentMethod === 'vodafone_cash' ? vodafoneSenderNumber : undefined,
+        paymentReceipt: receiptUrl || undefined,
       };
 
       if (user) {
@@ -126,36 +176,10 @@ function CheckoutContent() {
 
         if (!orderRes.ok) {
           const err = await orderRes.json();
-          throw new Error(err.message || "Failed to create order");
+          throw new Error(err.message || "فشل إنشاء الطلب");
         }
 
-        const orderResult = await orderRes.json();
-        const orderId = orderResult.data?._id || orderResult.data?.id;
-
-        // If payment method is Vodafone Cash, process payment
-        if (paymentMethod === "vodafone_cash" && orderId) {
-          const paymentRes = await fetch(
-            `${apiBase}/api/payments/vodafonecash`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                amount: totalAmount,
-                userId: user.id,
-                orderId: orderId,
-                phone: formData.phone,
-              }),
-            }
-          );
-
-          if (!paymentRes.ok) {
-            const paymentErr = await paymentRes.json();
-            throw new Error(paymentErr.message || "Payment processing failed");
-          }
-        }
+        // We skip the old payment api call since we handled it via the order object directly
       } else {
         // Guest Fallback
         addOrder({
@@ -178,7 +202,7 @@ function CheckoutContent() {
       setTimeout(() => router.push("/orders"), 2000);
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : "Something went wrong";
+        err instanceof Error ? err.message : "حدث خطأ ما";
       showError(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -187,14 +211,14 @@ function CheckoutContent() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <div className="bg-zinc-100 dark:bg-zinc-900 border border-green-500/30 p-8 rounded-2xl text-center max-w-md w-full">
           <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="h-8 w-8 text-green-500" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Order Confirmed!</h2>
+          <h2 className="text-2xl font-bold mb-2">تم تأكيد الطلب بنجاح!</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Thank you for your purchase. We will contact you shortly.
+            شكراً لطلبك. سنتواصل معك قريباً لتوصيل الطلب.
           </p>
         </div>
       </div>
@@ -202,11 +226,11 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-12 transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground pb-12 transition-colors duration-300" dir="rtl">
       <Navbar />
 
       <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+        <h1 className="text-3xl font-bold mb-8">إتمام الطلب</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form Section */}
@@ -219,7 +243,7 @@ function CheckoutContent() {
               {/* Contact */}
               <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <User className="h-5 w-5" /> Contact Information
+                  <User className="h-5 w-5" /> بيانات التواصل
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -227,7 +251,7 @@ function CheckoutContent() {
                       htmlFor="firstName"
                       className="block text-sm font-medium mb-1"
                     >
-                      First Name
+                      الاسم الأول
                     </label>
                     <input
                       id="firstName"
@@ -244,7 +268,7 @@ function CheckoutContent() {
                       htmlFor="lastName"
                       className="block text-sm font-medium mb-1"
                     >
-                      Last Name
+                      اسم العائلة
                     </label>
                     <input
                       id="lastName"
@@ -258,7 +282,7 @@ function CheckoutContent() {
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium mb-1">
-                      Phone Number (Egypt) *
+                      رقم الموبايل *
                     </label>
                     <input
                       required
@@ -281,16 +305,16 @@ function CheckoutContent() {
               {/* Shipping */}
               <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <MapPin className="h-5 w-5" /> Shipping Address
+                  <MapPin className="h-5 w-5" /> عنوان التوصيل
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium mb-1">
-                      Address
+                      العنوان بالتفصيل
                     </label>
                     <input
                       required
-                      placeholder="Street, Apartment"
+                      placeholder="اسم الشارع، رقم العمارة"
                       className="w-full p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800"
                       value={formData.address}
                       onChange={(e) =>
@@ -303,7 +327,7 @@ function CheckoutContent() {
                       htmlFor="city"
                       className="block text-sm font-medium mb-1"
                     >
-                      City
+                      المدينة/المحافظة
                     </label>
                     <input
                       id="city"
@@ -320,7 +344,7 @@ function CheckoutContent() {
                       htmlFor="postalCode"
                       className="block text-sm font-medium mb-1"
                     >
-                      Postal Code
+                      الرمز البريدي (اختياري)
                     </label>
                     <input
                       id="postalCode"
@@ -338,7 +362,7 @@ function CheckoutContent() {
               {/* Payment */}
               <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6">
                 <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" /> Payment Method
+                  <CreditCard className="h-5 w-5" /> طريقة الدفع
                 </h2>
                 <div className="space-y-3">
                   {/* Cash on Delivery */}
@@ -354,34 +378,91 @@ function CheckoutContent() {
                       <Truck className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="font-medium">Cash on Delivery</div>
-                      <div className="text-xs opacity-60">Pay on receipt</div>
+                      <div className="font-medium">الدفع عند الاستلام</div>
+                      <div className="text-xs opacity-60">ادفع لما يوصلك المندوب</div>
                     </div>
                     {paymentMethod === "cod" && (
-                      <Check className="h-5 w-5 text-blue-500 ml-auto" />
+                      <Check className="h-5 w-5 text-blue-500 mr-auto ml-0" />
                     )}
                   </div>
 
-                  {/* Vodafone Cash */}
+                  {/* vodafone Cash */}
                   <div
                     onClick={() => setPaymentMethod("vodafone_cash")}
-                    className={`cursor-pointer p-4 rounded-xl border flex items-center gap-3 transition-all ${
+                    className={`cursor-pointer p-4 rounded-xl border flex flex-col transition-all ${
                       paymentMethod === "vodafone_cash"
                         ? "bg-red-500/10 border-red-500"
                         : "bg-white dark:bg-black/30 border-zinc-200 dark:border-white/10"
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white">
-                      <Smartphone className="h-5 w-5" />
+                    <div className="flex items-center gap-3 w-full mb-2">
+                      <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white">
+                        <Smartphone className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="font-medium">فودافون كاش</div>
+                        <div className="text-xs opacity-60">
+                          ادفع عن طريق محفظة فودافون كاش
+                        </div>
+                      </div>
+                      {paymentMethod === "vodafone_cash" && (
+                        <Check className="h-5 w-5 text-red-500 mr-auto ml-0" />
+                      )}
+                    </div>
+                    
+                    {/* Vodafone Cash Inputs */}
+                    {paymentMethod === "vodafone_cash" && (
+                      <div className="mt-2 pt-4 border-t border-zinc-200 dark:border-zinc-700 w-full space-y-4">
+                        <p className="text-sm">
+                          حول المبلغ على الرقم ده: <span className="font-bold text-lg dir-ltr inline-block">01000000000</span>
+                        </p>
+                        <div>
+                          <label className="block text-xs mb-1 opacity-70">رقم المحفظة اللي حولت منها</label>
+                          <input 
+                            placeholder="01xxxxxxxxx"
+                            className="w-full p-2 text-sm rounded-lg border dark:bg-zinc-800"
+                            value={vodafoneSenderNumber}
+                            onChange={(e) => setVodafoneSenderNumber(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs mb-1 opacity-70">صورة التحويل (السكرين شوت)</label>
+                          <div className="relative">
+                            <input 
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              id="receipt-upload"
+                              onChange={(e) => setVodafoneReceipt(e.target.files?.[0] || null)}
+                            />
+                            <label htmlFor="receipt-upload" className="flex items-center justify-center gap-2 w-full p-3 border border-dashed border-zinc-400 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                              <Upload className="w-4 h-4" />
+                              {vodafoneReceipt ? vodafoneReceipt.name : "اضغط لرفع الصورة"}
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bank Al Ahly */}
+                  <div
+                    onClick={() => setPaymentMethod("bank_ahly")}
+                    className={`cursor-pointer p-4 rounded-xl border flex items-center gap-3 transition-all ${
+                      paymentMethod === "bank_ahly"
+                        ? "bg-green-700/10 border-green-700"
+                        : "bg-white dark:bg-black/30 border-zinc-200 dark:border-white/10"
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-green-700 flex items-center justify-center text-white">
+                      <Building className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="font-medium">Vodafone Cash</div>
-                      <div className="text-xs opacity-60">
-                        Pay via mobile wallet
-                      </div>
+                      <div className="font-medium">البنك الأهلي المصري</div>
+                      <div className="text-xs opacity-60">تحويل بنكي</div>
                     </div>
-                    {paymentMethod === "vodafone_cash" && (
-                      <Check className="h-5 w-5 text-red-500 ml-auto" />
+                    {paymentMethod === "bank_ahly" && (
+                      <Check className="h-5 w-5 text-green-700 mr-auto ml-0" />
                     )}
                   </div>
                 </div>
@@ -392,22 +473,22 @@ function CheckoutContent() {
           {/* Sidebar */}
           <div>
             <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-6 sticky top-24">
-              <h2 className="text-xl font-semibold mb-4">Summary</h2>
-              <div className="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2">
+              <h2 className="text-xl font-semibold mb-4">ملخص الطلب</h2>
+              <div className="space-y-2 mb-6 max-h-60 overflow-y-auto pl-2">
                 {checkoutItems.map((item, id) => (
                   <div key={id} className="flex justify-between text-sm">
                     <span>
                       {item.name} x{item.quantity}
                     </span>
                     <span className="font-mono">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {(item.price * item.quantity).toFixed(2)} ج.م
                     </span>
                   </div>
                 ))}
               </div>
               <div className="border-t border-zinc-200 dark:border-white/10 pt-4 flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span>${totalAmount.toFixed(2)}</span>
+                <span>الإجمالي</span>
+                <span>{totalAmount.toFixed(2)} ج.م</span>
               </div>
               <button
                 type="submit"
@@ -418,7 +499,7 @@ function CheckoutContent() {
                 {isProcessing ? (
                   <Loader2 className="animate-spin" />
                 ) : (
-                  "Confirm Order"
+                  "تأكيد الطلب"
                 )}
               </button>
             </div>

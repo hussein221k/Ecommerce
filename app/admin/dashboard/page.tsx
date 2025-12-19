@@ -19,6 +19,8 @@ import {
   TrendingUp,
   Clock,
   Loader2,
+  Eye,
+  ArrowRight,
 } from "lucide-react";
 import { useNotification } from "../../context/NotificationContext";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -45,6 +47,8 @@ export default function AdminDashboard() {
   const [uploading, setUploading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
   const { showSuccess, showError } = useNotification();
 
   // Form State
@@ -200,20 +204,31 @@ export default function AdminDashboard() {
     }
   };
 
+  const translateStatus = (status: string) => {
+      switch (status) {
+        case "Delivered": return "تم التوصيل";
+        case "Refused": return "مرفوض/مرتجع";
+        case "Shipped": return "تم الشحن";
+        case "Processing": return "جاري التجهيز";
+        case "Pending": return "قيد الانتظار";
+        default: return status;
+      }
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white p-8">
+    <div className="min-h-screen bg-black text-white p-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-12">
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Shield className="h-8 w-8 text-primary" />
-            Admin Dashboard
+            لوحة تحكم المسؤول
           </h1>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            خروج
           </button>
         </div>
 
@@ -221,44 +236,44 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-400">Total Revenue</span>
+              <span className="text-gray-400">إجمالي الإيرادات</span>
               <DollarSign className="h-6 w-6 text-green-500" />
             </div>
             <div className="text-3xl font-bold">
-              $
               {orders
                 .reduce((acc, order) => acc + order.totalAmount, 0)
-                .toFixed(2)}
+                .toFixed(2)}{" "}
+              ج.م
             </div>
-            <div className="text-sm text-green-500 mt-2">Real-time data</div>
+            <div className="text-sm text-green-500 mt-2">بيانات لحظية</div>
           </div>
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-400">Total Orders</span>
+              <span className="text-gray-400">إجمالي الطلبات</span>
               <Package className="h-6 w-6 text-blue-500" />
             </div>
             <div className="text-3xl font-bold">{orders.length}</div>
-            <div className="text-sm text-blue-500 mt-2">All time</div>
+            <div className="text-sm text-blue-500 mt-2">منذ البداية</div>
           </div>
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-400">Total Products</span>
+              <span className="text-gray-400">عدد المنتجات</span>
               <TrendingUp className="h-6 w-6 text-purple-500" />
             </div>
             <div className="text-3xl font-bold">{products.length}</div>
             <div className="text-sm text-purple-500 mt-2">
-              Inventory Status: Good
+              حالة المخزون: جيد
             </div>
           </div>
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-400">Pending Orders</span>
+              <span className="text-gray-400">طلبات معلقة</span>
               <Clock className="h-6 w-6 text-yellow-500" />
             </div>
             <div className="text-3xl font-bold">
               {orders.filter((o) => o.status === "Pending").length}
             </div>
-            <div className="text-sm text-yellow-500 mt-2">Needs attention</div>
+            <div className="text-sm text-yellow-500 mt-2">تحتاج متابعة</div>
           </div>
         </div>
 
@@ -272,9 +287,9 @@ export default function AdminDashboard() {
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            Products
+            المنتجات
             {activeTab === "products" && (
-              <div className="absolute bottom-[-5px] left-0 w-full h-1 bg-primary rounded-t-full" />
+              <div className="absolute bottom-[-5px] right-0 w-full h-1 bg-primary rounded-t-full" />
             )}
           </button>
           <button
@@ -285,9 +300,9 @@ export default function AdminDashboard() {
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            Orders
+            الطلبات
             {activeTab === "orders" && (
-              <div className="absolute bottom-[-5px] left-0 w-full h-1 bg-primary rounded-t-full" />
+              <div className="absolute bottom-[-5px] right-0 w-full h-1 bg-primary rounded-t-full" />
             )}
           </button>
           <button
@@ -298,9 +313,9 @@ export default function AdminDashboard() {
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            About Page
+            صفحة من نحن
             {activeTab === "about" && (
-              <div className="absolute bottom-[-5px] left-0 w-full h-1 bg-primary rounded-t-full" />
+              <div className="absolute bottom-[-5px] right-0 w-full h-1 bg-primary rounded-t-full" />
             )}
           </button>
           {/* Settings Tab Removed temporarily */}
@@ -311,7 +326,7 @@ export default function AdminDashboard() {
           {activeTab === "products" && (
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Product Management</h2>
+                <h2 className="text-xl font-semibold">إدارة المنتجات</h2>
                 <button
                   onClick={() => {
                     setIsEditing(false);
@@ -328,7 +343,7 @@ export default function AdminDashboard() {
                   className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg hover:bg-primary/90 transition-colors text-sm font-bold"
                 >
                   <Plus className="h-4 w-4" />
-                  Add Product
+                  إضافة منتج
                 </button>
               </div>
 
@@ -336,13 +351,13 @@ export default function AdminDashboard() {
                 <div className="mb-8 bg-black/50 p-6 rounded-xl border border-white/10">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-lg">
-                      {isEditing ? "Edit Product" : "New Product"}
+                      {isEditing ? "تعديل منتج" : "منتج جديد"}
                     </h3>
                     <button
                       onClick={() => setShowForm(false)}
                       className="text-gray-400 hover:text-white"
-                      title="Close form"
-                      aria-label="Close form"
+                      title="إغلاق النموذج"
+                      aria-label="إغلاق النموذج"
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -356,7 +371,7 @@ export default function AdminDashboard() {
                         htmlFor="product-name"
                         className="block text-sm text-gray-400 mb-1"
                       >
-                        Product Name
+                        اسم المنتج
                       </label>
                       <input
                         id="product-name"
@@ -373,7 +388,7 @@ export default function AdminDashboard() {
                         htmlFor="product-price"
                         className="block text-sm text-gray-400 mb-1"
                       >
-                        Price
+                        السعر
                       </label>
                       <input
                         id="product-price"
@@ -392,7 +407,7 @@ export default function AdminDashboard() {
                         htmlFor="product-category"
                         className="block text-sm text-gray-400 mb-1"
                       >
-                        Category
+                        القسم
                       </label>
                       <input
                         id="product-category"
@@ -409,7 +424,7 @@ export default function AdminDashboard() {
                         htmlFor="product-description"
                         className="block text-sm text-gray-400 mb-1"
                       >
-                        Description
+                        الوصف
                       </label>
                       <textarea
                         id="product-description"
@@ -430,7 +445,7 @@ export default function AdminDashboard() {
                         htmlFor="product-image"
                         className="block text-sm text-gray-400 mb-1"
                       >
-                        Upload Image
+                        رابط الصورة أو رفع ملف
                       </label>
                       <div className="flex gap-4 items-end">
                         <div className="flex-1">
@@ -478,7 +493,7 @@ export default function AdminDashboard() {
                         htmlFor="product-sizes"
                         className="block text-sm text-gray-400 mb-1"
                       >
-                        Sizes (comma separated)
+                        المقاسات (مفصولة بفاصلة)
                       </label>
                       <input
                         id="product-sizes"
@@ -496,13 +511,13 @@ export default function AdminDashboard() {
                         onClick={() => setShowForm(false)}
                         className="px-4 py-2 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors"
                       >
-                        Cancel
+                        إلغاء
                       </button>
                       <button
                         type="submit"
                         className="px-4 py-2 bg-primary rounded-lg hover:bg-primary/90 transition-colors font-bold"
                       >
-                        {isEditing ? "Update Product" : "Create Product"}
+                        {isEditing ? "تحديث المنتج" : "إنشاء المنتج"}
                       </button>
                     </div>
                   </form>
@@ -513,11 +528,11 @@ export default function AdminDashboard() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-gray-400 text-sm">
-                      <th className="py-3 px-2">Image</th>
-                      <th className="py-3 px-2">Name</th>
-                      <th className="py-3 px-2">Category</th>
-                      <th className="py-3 px-2">Price</th>
-                      <th className="py-3 px-2 text-right">Actions</th>
+                      <th className="py-3 px-2">الصورة</th>
+                      <th className="py-3 px-2">الاسم</th>
+                      <th className="py-3 px-2">القسم</th>
+                      <th className="py-3 px-2">السعر</th>
+                      <th className="py-3 px-2 text-left">إجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -544,7 +559,7 @@ export default function AdminDashboard() {
                           {product.category}
                         </td>
                         <td className="py-3 px-2">
-                          ${product.price.toFixed(2)}
+                          {product.price.toFixed(2)} ج.م
                         </td>
                         <td className="py-3 px-2 text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -577,19 +592,19 @@ export default function AdminDashboard() {
           {/* Order Management */}
           {activeTab === "orders" && (
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-xl font-semibold mb-6">Order Management</h2>
+              <h2 className="text-xl font-semibold mb-6">إدارة الطلبات</h2>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-gray-400 text-sm">
-                      <th className="py-3 px-2">Order ID</th>
-                      <th className="py-3 px-2">Date</th>
-                      <th className="py-3 px-2">Items</th>
-                      <th className="py-3 px-2">Total</th>
-                      <th className="py-3 px-2">Payment</th>
-                      <th className="py-3 px-2">Status</th>
-                      <th className="py-3 px-2 text-right">Actions</th>
+                      <th className="py-3 px-2 text-right">رقم الطلب</th>
+                      <th className="py-3 px-2 text-right">التاريخ</th>
+                      <th className="py-3 px-2 text-right">العميل</th>
+                      <th className="py-3 px-2 text-right">العناصر</th>
+                      <th className="py-3 px-2 text-right">الإجمالي</th>
+                      <th className="py-3 px-2 text-right">الحالة</th>
+                      <th className="py-3 px-2 text-right">إجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -603,13 +618,13 @@ export default function AdminDashboard() {
                             order.id.slice(-6).toUpperCase()}
                         </td>
                         <td className="py-3 px-2 text-sm text-gray-400">
-                          {new Date(order.date).toLocaleDateString()}
+                          {new Date(order.date).toLocaleDateString("ar-EG")}
                         </td>
                         <td className="py-3 px-2 text-sm">
-                          {order.items.length} items
+                          {order.items.length} عنصر
                         </td>
                         <td className="py-3 px-2 font-bold">
-                          ${order.totalAmount.toFixed(2)}
+                          {order.totalAmount.toFixed(2)} ج.م
                         </td>
                         <td className="py-3 px-2">
                           <span
@@ -619,7 +634,7 @@ export default function AdminDashboard() {
                                 : "bg-yellow-500/20 text-yellow-500"
                             }`}
                           >
-                            {order.paymentStatus || "pending"}
+                            {order.paymentStatus === "completed" ? "مدفوع" : "معلق"}
                           </span>
                         </td>
                         <td className="py-3 px-2">
@@ -628,11 +643,23 @@ export default function AdminDashboard() {
                               order.status
                             )}`}
                           >
-                            {order.status}
+                            {translateStatus(order.status)}
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-right">
+                         <td className="py-3 px-2 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {/* View Button */}
+                            <button
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setShowOrderModal(true);
+                              }}
+                              className="p-2 bg-indigo-500/20 text-indigo-500 rounded-lg hover:bg-indigo-500/30 transition-colors"
+                              title="عرض التفاصيل"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+
                             {/* Payment Toggle */}
                             <button
                               onClick={() =>
@@ -669,11 +696,11 @@ export default function AdminDashboard() {
                                 )
                               }
                             >
-                              <option value="Pending">Pending</option>
-                              <option value="Processing">Processing</option>
-                              <option value="Shipped">Shipped</option>
-                              <option value="Delivered">Delivered</option>
-                              <option value="Refused">Refused</option>
+                              <option value="Pending">قيد الانتظار</option>
+                              <option value="Processing">جاري التجهيز</option>
+                              <option value="Shipped">تم الشحن</option>
+                              <option value="Delivered">تم التوصيل</option>
+                              <option value="Refused">مرفوض/مرتجع</option>
                             </select>
                           </div>
                         </td>
@@ -689,7 +716,7 @@ export default function AdminDashboard() {
           {activeTab === "about" && (
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-semibold mb-6">
-                Edit About Page Content
+                تعديل محتوى صفحة من نحن
               </h2>
 
               <AboutPageEditor
@@ -758,6 +785,133 @@ export default function AdminDashboard() {
         cancelText="إلغاء"
         type="danger"
       />
+
+      {/* Order Details Modal */}
+      {showOrderModal && selectedOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" dir="rtl">
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-zinc-900/50 backdrop-blur-md sticky top-0">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Package className="h-6 w-6 text-primary" />
+                  تفاصيل الطلب: #{selectedOrder.orderNumber || selectedOrder.id.slice(-6).toUpperCase()}
+                </h2>
+                <p className="text-gray-400 text-sm mt-1">
+                  تاريخ الطلب: {new Date(selectedOrder.date).toLocaleString('ar-EG')}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-8">
+              {/* Customer Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">معلومات العميل</h3>
+                  <div className="bg-white/5 rounded-2xl p-4 space-y-2 border border-white/5">
+                    <p className="font-bold text-lg">
+                      {selectedOrder.shippingAddress?.firstName} {selectedOrder.shippingAddress?.lastName}
+                    </p>
+                    <p className="text-gray-300 flex items-center gap-2">
+                      <span className="text-primary italic">رقم الهاتف:</span>
+                      {selectedOrder.shippingAddress?.phone}
+                    </p>
+                    {selectedOrder.shippingAddress?.secondaryPhone && (
+                      <p className="text-gray-300 flex items-center gap-2 text-sm">
+                        <span className="text-zinc-500">هاتف آخر:</span>
+                        {selectedOrder.shippingAddress?.secondaryPhone}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">عنوان الشحن</h3>
+                  <div className="bg-white/5 rounded-2xl p-4 space-y-1 border border-white/5">
+                    <p className="text-gray-200">{selectedOrder.shippingAddress?.street}</p>
+                    <p className="text-gray-200">{selectedOrder.shippingAddress?.city}</p>
+                    <p className="text-gray-400 text-sm">{selectedOrder.shippingAddress?.country}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">المنتجات</h3>
+                <div className="space-y-3">
+                  {selectedOrder.items.map((item: any, idx: number) => (
+                    <div key={item._id || idx} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 bg-zinc-800 rounded-lg flex items-center justify-center font-bold text-primary">
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <p className="font-bold">{item.name}</p>
+                          <p className="text-sm text-gray-500">الكمية: {item.quantity}</p>
+                        </div>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{item.price.toFixed(2)} ج.م</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="bg-zinc-800/50 p-4 rounded-2xl border border-white/5">
+                  <h3 className="text-sm font-semibold text-gray-500 mb-2">طريقة الدفع</h3>
+                  <p className="font-bold flex items-center gap-2">
+                    {selectedOrder.paymentMethod === 'vodafone_cash' ? 'فودافون كاش' : 
+                     selectedOrder.paymentMethod === 'bank_ahly' ? 'البنك الأهلي' : 
+                     selectedOrder.paymentMethod === 'cod' ? 'الدفع عند الاستلام' : 'بطاقة بنكية'}
+                  </p>
+                </div>
+                <div className="bg-zinc-800/50 p-4 rounded-2xl border border-white/5">
+                  <h3 className="text-sm font-semibold text-gray-500 mb-2">إجمالي الطلب</h3>
+                  <p className="text-2xl font-bold text-accent">{selectedOrder.totalAmount.toFixed(2)} ج.م</p>
+                </div>
+              </div>
+
+              {/* Manual Payment Details */}
+              {selectedOrder.vodafoneNumber && (
+                 <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl">
+                    <h3 className="text-sm font-semibold text-red-400 mb-2">تفاصيل تحويل فودافون كاش</h3>
+                    <p className="text-gray-200">الرقم المحول منه: <span className="font-bold">{selectedOrder.vodafoneNumber}</span></p>
+                    {selectedOrder.paymentReceipt && (
+                        <a href={selectedOrder.paymentReceipt} target="_blank" rel="noreferrer" className="text-primary hover:underline text-sm block mt-2">
+                          عرض صورة التحويل (المخالصة)
+                        </a>
+                    )}
+                 </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-white/10 bg-zinc-900 flex justify-between gap-4">
+              <div className="flex gap-2">
+                 <button 
+                  onClick={() => setShowOrderModal(false)}
+                  className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-all"
+                 >
+                   إغلاق
+                 </button>
+              </div>
+              <div className="flex gap-2">
+                 <span className={`px-4 py-2 rounded-xl flex items-center font-bold text-sm ${getStatusColor(selectedOrder.status)}`}>
+                   {translateStatus(selectedOrder.status)}
+                 </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

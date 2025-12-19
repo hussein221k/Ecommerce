@@ -1,4 +1,6 @@
 const Order = require("../models/Order");
+const User = require("../models/User");
+const { sendInvoiceEmail } = require("../utils/email");
 
 // Create order
 exports.createOrder = async (req, res) => {
@@ -8,6 +10,7 @@ exports.createOrder = async (req, res) => {
     // Generate order number
     const orderNumber = `ORD-${Date.now()}`;
 
+
     const order = await Order.create({
       orderNumber,
       userId: req.userId,
@@ -16,6 +19,12 @@ exports.createOrder = async (req, res) => {
       paymentMethod,
       totalAmount,
     });
+
+    // Send invoice email if user has email
+    const user = await User.findById(req.userId);
+    if (user && user.email) {
+      await sendInvoiceEmail(user.email, order);
+    }
 
     res.status(201).json({
       success: true,

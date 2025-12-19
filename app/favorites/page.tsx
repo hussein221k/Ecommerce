@@ -14,7 +14,7 @@ export default function FavoritesPage() {
     const fetchFavs = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        setMessage("Please login or register first");
+        setMessage("يرجى تسجيل الدخول أو إنشاء حساب أولاً");
         return;
       }
       try {
@@ -37,12 +37,12 @@ export default function FavoritesPage() {
   }, [apiBase]);
 
   return (
-    <main className="min-h-screen p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Your Favorites</h1>
+    <main className="min-h-screen p-8 max-w-4xl mx-auto" dir="rtl">
+      <h1 className="text-2xl font-bold mb-4">المفضلة</h1>
       {message && <p className="text-sm text-red-500 mb-4">{message}</p>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {favorites.length === 0 ? (
-          <p className="text-gray-500">No favorites yet.</p>
+          <p className="text-gray-500">لا يوجد منتجات في المفضلة بعد.</p>
         ) : (
           favorites.map(
             (f: {
@@ -51,9 +51,9 @@ export default function FavoritesPage() {
               price: number;
               image: string;
             }) => (
-              <div key={f._id} className="p-4 border rounded">
+              <div key={f._id} className="p-4 border border-white/10 rounded-xl bg-zinc-900/50">
                 <h3 className="font-semibold">{f.name}</h3>
-                <p className="text-sm text-gray-500">${f.price}</p>
+                <p className="text-sm text-gray-400">{f.price} ج.م</p>
               </div>
             )
           )

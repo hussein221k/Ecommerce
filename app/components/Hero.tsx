@@ -68,14 +68,14 @@ export default function Hero() {
           ref={titleRef}
           className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 bg-clip-text  text-white from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400"
         >
-          تسوق بذكاء <br /> اختر نوفا
+          نوفا… <br /> الحاجة الحلوة بسعر معقول
         </h1>
 
         <p
           ref={subtitleRef}
           className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed"
         >
-          منتجات مميزة، أسعار ذكية، تجربة فريدة
+          أشيك المنتجات بأحسن الأسعار، عشانك وعشان بيتك
         </p>
 
         <div ref={buttonRef}>
@@ -83,7 +83,7 @@ export default function Hero() {
             href="/products"
             className="group inline-flex items-center gap-2 bg-gradient-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-purple-500/50 transition-all transform hover:scale-105"
           >
-            تسوق الآن
+            تسوق دلوقتي
             <ArrowRight className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           </Link>
         </div>

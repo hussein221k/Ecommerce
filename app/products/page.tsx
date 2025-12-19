@@ -6,11 +6,15 @@ import Link from "next/link";
 import gsap from "gsap";
 import { ShoppingCart } from "lucide-react";
 
+import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import { useProducts } from "../context/product-context";
+import { useCart } from "../context/cart-context";
 
 export default function ProductsPage() {
   const { products } = useProducts();
+  const { addToCart } = useCart();
+  const router = useRouter();
   const containerRef = useRef(null);
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -82,13 +86,26 @@ export default function ProductsPage() {
 
                   <div className="flex items-center justify-between mt-auto">
                     <span className="text-2xl font-bold text-white">
-                      ${product.price.toFixed(2)}
+                      {product.price.toFixed(2)} ج.م
                     </span>
 
-                    <span className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-semibold hover:bg-gray-200 transition-colors">
+                    <button
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        await addToCart({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          image: product.image
+                        });
+                        router.push("/checkout?id=cart");
+                      }}
+                      className="flex items-center gap-2 bg-primary text-white hover:bg-accent hover:text-black px-4 py-2 rounded-full font-semibold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
+                    >
                       <ShoppingCart className="h-4 w-4" />
-                      اشتري الآن
-                    </span>
+                      اشتري دلوقتي
+                    </button>
                   </div>
                 </div>
               </Link>

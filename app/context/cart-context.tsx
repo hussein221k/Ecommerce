@@ -22,6 +22,7 @@ type CartContextType = {
     name: string;
     price: number;
     image: string;
+    selectedSize?: string;
   }) => Promise<void>;
   removeFromCart: (id: number | string) => Promise<void>;
   updateQuantity: (id: number | string, quantity: number) => Promise<void>;
@@ -105,6 +106,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     name: string;
     price: number;
     image: string;
+    selectedSize?: string;
   }) => {
     // If not logged in, prevent add and show warning toast
     if (!user) {
@@ -140,6 +142,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             productId: String(product.id),
             quantity: 1,
+            selectedSize: product.selectedSize,
           }),
         });
         // Optionally refetch to ensure sync, but optimistic looks faster

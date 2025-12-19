@@ -52,7 +52,7 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["card", "paypal", "bank_transfer", "cod", "vodafone_cash"],
+      enum: ["card", "paypal", "bank_transfer", "cod", "vodafone_cash", "bank_ahly"],
       default: "card",
     },
     paymentStatus: {
@@ -60,6 +60,9 @@ const OrderSchema = new mongoose.Schema(
       enum: ["pending", "completed", "failed"],
       default: "pending",
     },
+    // New fields for manual payments
+    vodafoneNumber: String,
+    paymentReceipt: String,
     notes: String,
   },
   { timestamps: true }
